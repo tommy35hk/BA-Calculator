@@ -5,7 +5,6 @@ from scipy.optimize import minimize
 from tkinter import *
 import sys
 
-
 def input_value():
     global basic_reward
     global final_reward
@@ -20,8 +19,6 @@ def input_value():
     final_reward = np.ceil(basic_reward * (1 + bonus))
     sol = minimize(lambda x:sum(x), x0, method='SLSQP', bounds=bnds,
                    constraints=cons)
-    print(final_reward)
-    print(np.ceil(sol.x))
 
     for i, name in enumerate(quiz_name):
         tkinter.Label(resultFrame, text=name).grid(row=i, column=0)
@@ -39,10 +36,6 @@ def constraint4(x):
 
 items_name = ["item1", "item2", "item3", "item4"]
 quiz_name = ["Q9", "Q10", "Q11", "Q12"]
-entries1 = []
-entries2 = []
-entries3 = []
-entries4 = []
 items_list1 = pd.DataFrame({
     "Name": ["神名文字", "初級活動報告", "一般活動報告", "高級活動報告",
              "最高級活動報告", "基礎技術筆記（三一）", "一般技術筆記（三一）",
