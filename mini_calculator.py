@@ -16,6 +16,7 @@ pd.set_option('display.unicode.east_asian_width', True)
 #Create first window for Combobox, user can select the event they need
 root = Tk()
 root.resizable(False,False)
+root.title("BA Calculator")
 label = ttk.Label(text="Please select an event:")
 label.pack(side=TOP)
 selected_event = tkinter.StringVar()
@@ -37,7 +38,7 @@ def create_form(event):
     resultFrame.pack(side=LEFT)
     botFrame = Frame(result)
     botFrame.pack(side=RIGHT)
-    root.title("Entry Boxes")
+    result.title(selected_event.get())
 
     items_list_collection = []
     entries_collection = []
