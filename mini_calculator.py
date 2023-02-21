@@ -7,26 +7,26 @@ from tkinter import ttk
 import sys
 import os
 
-
-
-
-
-
 items_name = ["item1", "item2", "item3", "item4"]
 quiz_name = ["Q9", "Q10", "Q11", "Q12"]
 
 pd.set_option('display.unicode.east_asian_width', True)
 
+
+#Create first window for Combobox, user can select the event they need
 root = Tk()
 root.resizable(False,False)
 label = ttk.Label(text="Please select an event:")
 label.pack(side=TOP)
 selected_event = tkinter.StringVar()
 event_cb = ttk.Combobox(root, textvariable=selected_event)
+#Option in Combobox will be based on the file we have
 event_cb['values'] = [name for name in os.listdir() if os.path.isdir(name)
                       and name != ".git"]
 event_cb['state'] = 'readonly'
 event_cb.pack(side=TOP)
+
+#Create second form for collect entry and calculation
 def create_form(event):
     result = Toplevel(root)
     topFrame = Frame(result)
@@ -41,7 +41,7 @@ def create_form(event):
 
     items_list_collection = []
     entries_collection = []
-
+    #Fill data from the folder selected
     for file in ["item1.csv", "item2.csv", "item3.csv", "item4.csv"]:
         items_list_collection.append(pd.read_csv(os.path.join(selected_event.get(), file)))
     df = os.path.join(selected_event.get(),"basic_reward.csv")
@@ -50,6 +50,7 @@ def create_form(event):
     bonus_entries = []
     items_cost = [0, 0, 0, 0]
 
+    #Create forms based on the data input
     for i, items_list in enumerate(items_list_collection):
         entry = []
         for j, (name, qty) in enumerate(zip(items_list["Name"], items_list["start_qty"])):
@@ -67,6 +68,7 @@ def create_form(event):
         my_entry.grid(row=i, column=1)
         bonus_entries.append(my_entry)
 
+    #Setting for scipy minimize
     def constraint1(x):
         return np.matmul(final_reward[0], x) - items_cost[0]
 
@@ -86,6 +88,8 @@ def create_form(event):
     con3 = {'type': 'ineq', 'fun': constraint3}
     con4 = {'type': 'ineq', 'fun': constraint4}
     cons = [con1, con2, con3, con4]
+
+    #Collect user entries and do calculation
     def input_value():
         items_cost.clear()
         try:
