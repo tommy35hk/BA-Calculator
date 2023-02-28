@@ -21,6 +21,7 @@ label = ttk.Label(text="Please select an event:")
 label.pack(side=TOP)
 selected_event = tkinter.StringVar()
 event_cb = ttk.Combobox(root, textvariable=selected_event)
+
 #Option in Combobox will be based on the file we have
 event_cb['values'] = [name for name in os.listdir() if os.path.isdir(name)
                       and name != ".git"]
