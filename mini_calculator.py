@@ -44,7 +44,7 @@ def create_form(event):
     entries_collection = []
     #Fill data from the folder selected
     files = sorted([name for name in os.listdir(os.path.join(event_dir, selected_event.get()))\
-             if name.startswith("item") and name.endswith(".csv")])
+             if name[0].isnumeric() and name.endswith(".csv")])
     for file in files:
         items_list_collection.append(pd.read_csv(os.path.join(event_dir, selected_event.get(), file)))
     df = os.path.join(event_dir, selected_event.get(), "basic_reward.csv")
@@ -65,7 +65,7 @@ def create_form(event):
         entries_collection.append(entry)
 
     for i, name in enumerate(files):
-        tkinter.Label(midFrame, text=name[:5]).grid(row=i, column=0)
+        tkinter.Label(midFrame, text=name[2:-4]).grid(row=i, column=0)
         my_entry = Entry(midFrame)
         my_entry.insert(0, 0)
         my_entry.grid(row=i, column=1)
