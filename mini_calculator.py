@@ -44,13 +44,16 @@ def create_form(event):
     items_list_collection = []
     entries_collection = []
     #Fill data from the folder selected
-    for file in ["item1.csv", "item2.csv", "item3.csv", "item4.csv"]:
+    files = sorted([name for name in os.listdir(selected_event.get())\
+             if name.startswith("item") and name.endswith(".csv")])
+    for file in files:
         items_list_collection.append(pd.read_csv(os.path.join(selected_event.get(), file)))
     df = os.path.join(selected_event.get(),"basic_reward.csv")
     basic_reward = (np.loadtxt(open(df),delimiter=","))
     final_reward = basic_reward.copy()
+
     bonus_entries = []
-    items_cost = [0, 0, 0, 0]
+    items_cost = [0 for _ in range(len(files))]
 
     #Create forms based on the data input
     for i, items_list in enumerate(items_list_collection):
@@ -71,25 +74,9 @@ def create_form(event):
         bonus_entries.append(my_entry)
 
     #Setting for scipy minimize
-    def constraint1(x):
-        return np.matmul(final_reward[0], x) - items_cost[0]
-
-    def constraint2(x):
-        return np.matmul(final_reward[1], x) - items_cost[1]
-
-    def constraint3(x):
-        return np.matmul(final_reward[2], x) - items_cost[2]
-
-    def constraint4(x):
-        return np.matmul(final_reward[3], x) - items_cost[3]
-
     bnds = [(0, 1000) for _ in range(4)]
     x0 = np.array([1, 1, 1, 1])
-    con1 = {'type': 'ineq', 'fun': constraint1}
-    con2 = {'type': 'ineq', 'fun': constraint2}
-    con3 = {'type': 'ineq', 'fun': constraint3}
-    con4 = {'type': 'ineq', 'fun': constraint4}
-    cons = [con1, con2, con3, con4]
+    cons = [{'type':'ineq', 'fun':lambda x,coef=i:np.matmul(final_reward[coef],x) - items_cost[coef]} for i in range(len(files))]
 
     #Collect user entries and do calculation
     def input_value():
