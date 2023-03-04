@@ -50,7 +50,6 @@ def create_form(event):
         items_list_collection.append(pd.read_csv(os.path.join(selected_event.get(), file)))
     df = os.path.join(selected_event.get(),"basic_reward.csv")
     basic_reward = (np.loadtxt(open(df),delimiter=","))
-    final_reward = basic_reward.copy()
 
     bonus_entries = []
     items_cost = [0 for _ in range(len(files))]
@@ -66,8 +65,8 @@ def create_form(event):
             entry.append(my_entry)
         entries_collection.append(entry)
 
-    for i, name in enumerate(items_name):
-        tkinter.Label(midFrame, text=name).grid(row=i, column=0)
+    for i, name in enumerate(files):
+        tkinter.Label(midFrame, text=name[:5]).grid(row=i, column=0)
         my_entry = Entry(midFrame)
         my_entry.insert(0, 0)
         my_entry.grid(row=i, column=1)
@@ -76,7 +75,6 @@ def create_form(event):
     #Setting for scipy minimize
     bnds = [(0, 1000) for _ in range(4)]
     x0 = np.array([1, 1, 1, 1])
-    cons = [{'type':'ineq', 'fun':lambda x,coef=i:np.matmul(final_reward[coef],x) - items_cost[coef]} for i in range(len(files))]
 
     #Collect user entries and do calculation
     def input_value():
@@ -88,7 +86,9 @@ def create_form(event):
             bonus = np.array([float(entry.get()) for entry in bonus_entries])
         except ValueError:
             sys.exit("QTY should be positive integer")
-        final_reward = np.ceil(basic_reward * (1 + bonus))
+        final_reward = np.ceil(np.array([basic_reward[i] * (1 + bonus[i]) for i in range(len(bonus))]))
+        cons = [{'type': 'ineq', 'fun': lambda x, coef=i: np.matmul(final_reward[coef], x) - items_cost[coef]} for i in
+                range(len(files))]
         sol = minimize(lambda x: sum(x), x0, method='SLSQP', bounds=bnds,
                        constraints=cons)
 
