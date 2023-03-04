@@ -23,7 +23,7 @@ event_cb = ttk.Combobox(root, textvariable=selected_event)
 
 #Option in Combobox will be based on the file we have
 event_dir = os.path.join(os.path.dirname(__file__), 'event')
-event_cb['values'] = [name for name in os.listdir(event_dir)]
+event_cb['values'] = [name for name in os.listdir(event_dir) if name != ".DS_Store"]
 event_cb['state'] = 'readonly'
 event_cb.pack(side=TOP)
 
