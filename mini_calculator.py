@@ -7,7 +7,6 @@ from tkinter import ttk
 import sys
 import os
 
-items_name = ["item1", "item2", "item3", "item4"]
 quiz_name = ["Q9", "Q10", "Q11", "Q12"]
 
 pd.set_option('display.unicode.east_asian_width', True)
@@ -23,8 +22,7 @@ selected_event = tkinter.StringVar()
 event_cb = ttk.Combobox(root, textvariable=selected_event)
 
 #Option in Combobox will be based on the file we have
-event_cb['values'] = [name for name in os.listdir() if os.path.isdir(name)
-                      and name != ".git"]
+event_cb['values'] = [name for name in os.listdir('event')]
 event_cb['state'] = 'readonly'
 event_cb.pack(side=TOP)
 
@@ -44,11 +42,11 @@ def create_form(event):
     items_list_collection = []
     entries_collection = []
     #Fill data from the folder selected
-    files = sorted([name for name in os.listdir(selected_event.get())\
+    files = sorted([name for name in os.listdir(os.path.join("event",selected_event.get()))\
              if name.startswith("item") and name.endswith(".csv")])
     for file in files:
-        items_list_collection.append(pd.read_csv(os.path.join(selected_event.get(), file)))
-    df = os.path.join(selected_event.get(),"basic_reward.csv")
+        items_list_collection.append(pd.read_csv(os.path.join('event',selected_event.get(), file)))
+    df = os.path.join('event', selected_event.get(),"basic_reward.csv")
     basic_reward = (np.loadtxt(open(df),delimiter=","))
 
     bonus_entries = []
