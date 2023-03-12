@@ -7,27 +7,6 @@ from tkinter import ttk
 import sys
 import os
 
-quiz_name = ["Q9", "Q10", "Q11", "Q12"]
-
-pd.set_option('display.unicode.east_asian_width', True)
-
-
-#Create first window for Combobox, user can select the event they need
-root = Tk()
-root.resizable(False,False)
-root.title("BA Calculator")
-label = ttk.Label(text="Please select an event:")
-label.pack(side=TOP)
-selected_event = tkinter.StringVar()
-event_cb = ttk.Combobox(root, textvariable=selected_event)
-
-#Option in Combobox will be based on the file we have
-event_dir = os.path.join(os.path.dirname(__file__), 'event')
-event_cb['values'] = [name for name in os.listdir(event_dir) if name != ".DS_Store"]
-event_cb['state'] = 'readonly'
-event_cb.pack(side=TOP)
-
-#Create second form for collect entry and calculation
 def create_form(event):
     result = Toplevel(root)
     topFrame = Frame(result)
@@ -67,7 +46,7 @@ def create_form(event):
     for i, name in enumerate(files):
         tkinter.Label(midFrame, text=name[2:-4]).grid(row=i, column=0)
         my_entry = Entry(midFrame)
-        my_entry.insert(0, 0)
+        my_entry.insert("0", "0")
         my_entry.grid(row=i, column=1)
         bonus_entries.append(my_entry)
 
@@ -98,6 +77,27 @@ def create_form(event):
     my_button = Button(botFrame, text="Input", command=input_value)
     my_button.pack()
 
+quiz_name = ["Q9", "Q10", "Q11", "Q12"]
+
+pd.set_option('display.unicode.east_asian_width', True)
+
+
+#Create first window for Combobox, user can select the event they need
+root = Tk()
+root.resizable(False,False)
+root.title("BA Calculator")
+label = ttk.Label(text="Please select an event:")
+label.pack(side=TOP)
+selected_event = tkinter.StringVar()
+event_cb = ttk.Combobox(root, textvariable=selected_event)
+
+#Option in Combobox will be based on the file we have
+event_dir = os.path.join(os.path.dirname(__file__), 'event')
+event_cb['values'] = [name for name in os.listdir(event_dir) if name != ".DS_Store"]
+event_cb['state'] = 'readonly'
+event_cb.pack(side=TOP)
+
+#Create second form for collect entry and calculation
 event_cb.bind("<<ComboboxSelected>>",create_form)
 
 root.mainloop()
