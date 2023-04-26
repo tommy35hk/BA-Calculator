@@ -51,7 +51,7 @@ def create_form(event):
         bonus_entries.append(my_entry)
 
     #Setting for scipy minimize
-    bnds = [(0, 1000) for _ in range(4)]
+    bnds = [(0, 10000) for _ in range(4)]
     x0 = np.array([1, 1, 1, 1])
 
     #Collect user entries and do calculation
