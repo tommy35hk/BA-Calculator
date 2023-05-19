@@ -117,8 +117,8 @@ class EventSelection:
         my_button.pack()
 
     def count_minimum(self, items_cost, final_reward):
-        bnds = [(0, 10000) for _ in range(4)]
-        x0 = np.array([1 for _ in range(4)])
+        bnds = [(0, 10000) for _ in range(len(mission))]
+        x0 = np.array([1 for _ in range(len(mission))])
         cons = [
             {
                 'type': 'ineq',
