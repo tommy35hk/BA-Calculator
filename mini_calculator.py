@@ -1,103 +1,136 @@
-import tkinter
-import pandas as pd
+import csv
 import numpy as np
+import tkinter
 from scipy.optimize import minimize
 from tkinter import *
 from tkinter import ttk
 import sys
 import os
 
-def create_form(event):
-    result = Toplevel(root)
-    topFrame = Frame(result)
-    topFrame.pack(side=TOP)
-    midFrame = Frame(result)
-    midFrame.pack(side=LEFT)
-    resultFrame = Frame(result)
-    resultFrame.pack(side=LEFT)
-    botFrame = Frame(result)
-    botFrame.pack(side=RIGHT)
-    result.title(selected_event.get())
-
-    items_list_collection = []
-    entries_collection = []
-    #Fill data from the folder selected
-    files = sorted([name for name in os.listdir(os.path.join(event_dir, selected_event.get()))\
-             if name[0].isnumeric() and name.endswith(".csv")])
-    for file in files:
-        items_list_collection.append(pd.read_csv(os.path.join(event_dir, selected_event.get(), file)))
-    df = os.path.join(event_dir, selected_event.get(), "basic_reward.csv")
-    basic_reward = (np.loadtxt(open(df),delimiter=","))
-
-    bonus_entries = []
-    items_cost = [0 for _ in range(len(files))]
-
-    #Create forms based on the data input
-    for i, items_list in enumerate(items_list_collection):
-        entry = []
-        for j, (name, qty) in enumerate(zip(items_list["Name"], items_list["start_qty"])):
-            tkinter.Label(topFrame, text=name).grid(row=j, column=i * 2)
-            my_entry = Entry(topFrame)
-            my_entry.insert(0, qty)
-            my_entry.grid(row=j, column=i * 2 + 1)
-            entry.append(my_entry)
-        entries_collection.append(entry)
-
-    for i, name in enumerate(files):
-        tkinter.Label(midFrame, text=name[2:-4]).grid(row=i, column=0)
-        my_entry = Entry(midFrame)
-        my_entry.insert("0", "0")
-        my_entry.grid(row=i, column=1)
-        bonus_entries.append(my_entry)
-
-    #Setting for scipy minimize
-    bnds = [(0, 10000) for _ in range(4)]
-    x0 = np.array([1, 1, 1, 1])
-
-    #Collect user entries and do calculation
-    def input_value():
-        items_cost.clear()
-        try:
-            for list, entries in zip(items_list_collection, entries_collection):
-                item_cost = np.array([int(entry.get()) for entry in entries])
-                items_cost.append(sum(item_cost * list["Cost"].to_numpy()))
-            bonus = np.array([float(entry.get()) for entry in bonus_entries])
-        except ValueError:
-            sys.exit("QTY should be positive integer")
-        final_reward = np.ceil(np.array([basic_reward[i] * (1 + bonus[i]) for i in range(len(bonus))]))
-        cons = [{'type': 'ineq', 'fun': lambda x, coef=i: np.matmul(final_reward[coef], x) - items_cost[coef]} for i in
-                range(len(files))]
-        sol = minimize(lambda x: sum(x), x0, method='SLSQP', bounds=bnds,
-                       constraints=cons)
-
-        for i, name in enumerate(quiz_name):
-            tkinter.Label(resultFrame, text=name).grid(row=i, column=0)
-            tkinter.Label(resultFrame, text=np.ceil(sol.x[i])).grid(row=i, column=1)
-
-    my_button = Button(botFrame, text="Input", command=input_value)
-    my_button.pack()
-
-quiz_name = ["Q9", "Q10", "Q11", "Q12"]
-
-pd.set_option('display.unicode.east_asian_width', True)
-
-
-#Create first window for Combobox, user can select the event they need
 root = Tk()
-root.resizable(False,False)
 root.title("BA Calculator")
-label = ttk.Label(text="Please select an event:")
-label.pack(side=TOP)
-selected_event = tkinter.StringVar()
-event_cb = ttk.Combobox(root, textvariable=selected_event)
+root.resizable(False, False)
 
-#Option in Combobox will be based on the file we have
-event_dir = os.path.join(os.path.dirname(__file__), 'event')
-event_cb['values'] = [name for name in os.listdir(event_dir) if name != ".DS_Store"]
-event_cb['state'] = 'readonly'
-event_cb.pack(side=TOP)
+mission = []
+items_cost = []
+final_reward = None
 
-#Create second form for collect entry and calculation
-event_cb.bind("<<ComboboxSelected>>",create_form)
 
+class ItemEntry:
+    def __init__(self, master, csvfile):
+        global items_cost
+        my_frame = Frame(master)
+        my_frame.pack(side=LEFT)
+        self.entries = []
+        self.item_cost = []
+        with open(csvfile, "r") as f:
+            reader = csv.DictReader(f)
+            for i, line in enumerate(reader):
+                Label(my_frame, text=line["Name"]).grid(row=i, column=0)
+                my_entry = Entry(my_frame)
+                my_entry.insert(0, line["start_qty"])
+                my_entry.grid(row=i, column=1)
+                self.entries.append(my_entry)
+                self.item_cost.append(int(line["Cost"]))
+
+    def count(self):
+        self.item_qyy = np.array([int(entry.get()) for entry in self.entries])
+        self.item_cost = np.array(self.item_cost)
+        items_cost.append(sum(self.item_cost * self.item_qyy))
+
+
+class BonusEntry:
+
+    def __init__(self, master, csvfile, files):
+        global mission
+        my_frame = Frame(master)
+        my_frame.pack(side=LEFT)
+        self.bonus_entries = []
+
+        for i, name in enumerate(files):
+            Label(my_frame, text=name[2:-4]).grid(row=i, column=0)
+            my_entry = Entry(my_frame)
+            my_entry.insert("0", "0")
+            my_entry.grid(row=i, column=1)
+            self.bonus_entries.append(my_entry)
+        with open(csvfile) as f:
+            reader = f.readlines()
+            mission = reader[0].strip().split(',')
+            self.reward = np.loadtxt(reader[1:], delimiter=",")
+
+    def count(self):
+        global final_reward
+        self.bonus = np.array([float(entry.get()) for entry in self.bonus_entries])
+        self.reward = np.array(self.reward)
+        final_reward = np.array([(1 + self.bonus[i]) * self.reward[i] for i in range(len(self.bonus_entries))])
+        final_reward = np.ceil(final_reward)
+
+class EventSelection:
+    def __init__(self, master):
+        my_frame = Frame(master)
+        my_frame.pack()
+        label = ttk.Label(my_frame, text="Please select an event:")
+        label.pack(side=TOP)
+        self.selected_event = tkinter.StringVar()
+        event_cb = ttk.Combobox(master, textvariable=self.selected_event)
+
+        self.event_dir = os.path.join(os.path.dirname(__file__), "event")
+        event_cb["values"] = [
+            name for name in os.listdir(self.event_dir)
+            if name != ".DS_Store"
+        ]
+        event_cb["state"] = "readonly"
+        event_cb.pack(side=TOP)
+
+        event_cb.bind("<<ComboboxSelected>>", self.create_form)
+
+    def create_form(self,*args):
+        self.result = Toplevel(root)
+        self.items_frame = Frame(self.result)
+        self.items_frame.pack(side=TOP)
+        self.bottom_frame = Frame(self.result)
+        self.bottom_frame.pack(side=LEFT)
+        self.button_frame = Frame(self.result)
+        self.button_frame.pack(side=RIGHT)
+
+        files = sorted([
+            name for name in os.listdir(os.path.join(self.event_dir, self.selected_event.get()))
+            if name[0].isnumeric() and name.endswith(".csv")
+        ])
+        events = [
+            ItemEntry(self.items_frame, os.path.join(self.event_dir, self.selected_event.get(), file))
+            for file in files
+        ]
+        df = os.path.join(self.event_dir, self.selected_event.get(), "basic_reward.csv")
+        bonus = BonusEntry(self.bottom_frame, df, files)
+        self.result_frame = Frame(self.bottom_frame)
+        self.result_frame.pack(side=LEFT)
+        my_button = Button(
+            self.button_frame, text="Count",
+            command=lambda: [
+                items_cost.clear(),
+                [event.count() for event in events],
+                bonus.count(),
+                self.count_minimum(items_cost, final_reward)
+            ]
+        )
+        my_button.pack()
+
+    def count_minimum(self, items_cost, final_reward):
+        bnds = [(0, 10000) for _ in range(4)]
+        x0 = np.array([1 for _ in range(4)])
+        cons = [
+            {
+                'type': 'ineq',
+                'fun': lambda x, coef=i: np.matmul(final_reward[coef], x) - items_cost[coef]
+            } for i in range(len(final_reward))
+        ]
+        sol = minimize(lambda x: sum(x), x0, method="SLSQP", bounds=bnds, constraints=cons)
+
+        for i, name in enumerate(mission):
+            Label(self.result_frame, text=name).grid(row=i, column=0)
+            Label(self.result_frame, text=np.ceil(sol.x[i])).grid(row=i, column=1)
+
+
+EventSelection(root)
 root.mainloop()
