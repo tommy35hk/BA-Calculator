@@ -156,5 +156,3 @@ class EventFrame:
 
 EventSelection(root)
 root.mainloop()
-
-# not working normally when multiple events are selected
